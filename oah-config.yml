@@ -2,7 +2,7 @@
 # environment Name
 oah_env_name: oah-bes-vm
 #GUI Flag
-oah_vm_gui: true
+oah_vm_gui: false
 # `vagrant_box` .
 #vagrant_box: OAH/ubuntu1404
 vagrant_box: "hashicorp/bionic64"
@@ -39,7 +39,7 @@ vagrant_synced_folders: []
   #   create: true
 
 # Memory and CPU to use for this VM.
-vagrant_memory: 2048
+vagrant_memory: 1024
 vagrant_cpus: 1 
 
 # # The web server software to use. Can be either 'apache' or 'nginx'.

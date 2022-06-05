@@ -82,48 +82,6 @@ sudo systemctl disable apt-daily.service
 sudo systemctl disable apt-daily.timer
 SCRIPT
 
-# $script = <<SCRIPT
-# echo "create user vagrant"
-# adduser --disabled-password --gecos "" vagrant
-# echo 'vagrant:vagrant' | chpasswd
-# ls -al /home/
-# echo "add sudo privilege to user vagrant"
-# cp /etc/sudoers.d/90-cloud-init-users /etc/sudoers.d/admin
-# chmod +w /etc/sudoers.d/admin
-# ls -al /etc/sudoers.d/
-# sed -i 's/ubuntu/vagrant/g' /etc/sudoers.d/admin
-# cat /etc/sudoers.d/admin
-# echo "enable ssh access for user vagrant"
-# rm -rf /home/ubuntu/.ssh
-# echo "generating new ssh key pairs"
-# ssh-keygen -t rsa -f /home/ubuntu/.ssh/
-# echo "generating authorized_keys"
-# ls /home/ubuntu/.ssh/
-# cp /home/ubuntu/.ssh/id_rsa.pub /home/ubuntu/.ssh/authorized_keys
-# chmod 600 /home/ubuntu/.ssh/authorized_keys
-# mkdir -p /home/vagrant/.ssh
-# echo "listing contents of under /home/ubuntu/.ssh"
-# ls /home/ubuntu/.ssh
-# chown vagrant:vagrant /home/vagrant/.ssh
-# cat /home/ubuntu/.ssh/authorized_keys >> /home/vagrant/.ssh/authorized_keys
-# echo "value of authorized_keys under ubuntu"
-# cat /home/ubuntu/.ssh/authorized_keys
-# echo "value of authorized_keys under vagrant"
-# cat /home/vagrant/.ssh/authorized_keys
-# chown vagrant:vagrant /home/vagrant/.ssh/authorized_keys
-# su - vagrant -c "cat /home/vagrant/.ssh/authorized_keys"
-# chmod 600 /home/vagrant/.ssh/authorized_keys
-# ls -al /home/vagrant/.ssh
-# chmod 700 /home/vagrant/.ssh
-# ls -al /home/vagrant
-# sudo apt update -y
-# sudo apt full-upgrade -y
-# sudo apt-get autoremove -y
-# test -e /usr/bin/python || (sudo apt -y update && apt install -y python-minimal)
-# sudo systemctl disable apt-daily.service
-# sudo systemctl disable apt-daily.timer
-# SCRIPT
-
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = vconfig['vagrant_hostname']
@@ -139,28 +97,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.network :public_network, ip: vconfig['vagrant_public_ip']
   end
 
-  # # Autoconfigure hosts. This will copy the private network addresses from
-  # # each VM and update hosts entries on all other machines. No further
-  # # configuration is needed.
-  # Vagrant.configure('2') do |config|
-
-  #   config.vm.define :first do |node|
-  #     node.vm.box = ""
-  #     node.vm.network :private_network, :ip => '10.20.1.2'
-  #     node.vm.provision :hosts, :sync_hosts => true
-  #   end
-
-  #   config.vm.define :second do |node|
-  #     node.vm.box = "ubuntu/bionic64"
-  #     node.vm.network :private_network, :ip => '10.20.1.3'
-  #     node.vm.provision :hosts, :sync_hosts => true
-  #   end
-  # end
-
-  # config.ssh.insert_key = true
-  # config.ssh.forward_agent = true
-  # config.ssh.username = vconfig['vagrant_user']
-
   Vagrant.configure("2") do |config|
     config.ssh.insert_key = true
     config.ssh.private_key_path = "~/.ssh/id_rsa"
@@ -172,25 +108,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #config.ssh.private_key_path = ['~/.vagrant.d/insecure_private_key', '~/.ssh/id_rsa']
 
   config.vm.box = vconfig['vagrant_box']
-
-  # If hostsupdater plugin is installed, add all server names as aliases.
-  # if Vagrant.has_plugin?("vagrant-hostsupdater")
-  #   config.hostsupdater.aliases = []
-  #   # Add all hosts that aren't defined as Ansible vars.
-  #   if vconfig['oahvm_webserver'] == "apache"
-  #     for host in vconfig['apache_vhosts']
-  #       unless host['servername'].include? "{{"
-  #         config.hostsupdater.aliases.push(host['servername'])
-  #       end
-  #     end
-  #   else
-  #     for host in vconfig['nginx_hosts']
-  #       unless host['server_name'].include? "{{"
-  #         config.hostsupdater.aliases.push(host['server_name'])
-  #       end
-  #     end
-  #   end
-  # end
 
   for synced_folder in vconfig['vagrant_synced_folders'];
     config.vm.synced_folder synced_folder['local_path'], synced_folder['destination'],
@@ -214,11 +131,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
   else
      config.vm.provision "shell", inline: $script_local_ansible, env: { "VHOME" => "/home/vagrant", "env_repo_name" => ENV['env_repo_name'], "OAH_DIR" => ENV['OAH_DIR'], "OAH_GITHUB_URL" => ENV['OAH_GITHUB_URL'] } 
-      #config.vm.provision "ansible_local" do |ansible|
-      # ansible.playbook = "../../provisioning/oah-install.yml"
-      #ansible.playbook = "../../provisioning/oah-install.yml"
-      #ansible.galaxy_role_file = "../../provisioning/oah-requirements.yml"
-      #end
   end
 
 
@@ -231,6 +143,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.customize ["modifyvm", :id, "--ioapic", "on"]
     v.gui=vconfig['oah_vm_gui']
   end
-  config.vm.define vconfig['vagrant_machine_name'] do |d|
+  vconfig['vagrant_cluster_vm_names'].each do |i|
+    config.vm.define "#{i}" do |d|
+      # node.vm.box = "hashicorp/bionic64"
+      # node.vm.box_url = "https://vagrantcloud.com/hashicorp/bionic64"
+    end
+  end
+  # config.vm.define vconfig['vagrant_machine_name'] do |d|
   end
 end
