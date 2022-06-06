@@ -134,7 +134,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
 
-  # VirtualBox.
+  # Default oah-bes-vm code
+  #  VirtualBox.
   config.vm.provider :virtualbox do |v|
     v.name = vconfig['vagrant_hostname']
     v.memory = vconfig['vagrant_memory']
@@ -143,12 +144,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.customize ["modifyvm", :id, "--ioapic", "on"]
     v.gui=vconfig['oah_vm_gui']
   end
-  vconfig['vagrant_cluster_vm_names'].each do |i|
-    config.vm.define "#{i}" do |d|
-      # node.vm.box = "hashicorp/bionic64"
-      # node.vm.box_url = "https://vagrantcloud.com/hashicorp/bionic64"
-    end
-  end
-  # config.vm.define vconfig['vagrant_machine_name'] do |d|
+  config.vm.define vconfig['vagrant_machine_name'] do |d|
   end
 end
+
+#  Custom oah-bes-cluster code
+#   vconfig['vagrant_cluster_vm_names'].each do |i|
+#     config.vm.define "#{i}" do |d|
+#       d.vm.hostname = "#{i}"
+#       d.vm.memory = vconfig['vagrant_memory']
+#       d.vm.cpus = vconfig['vagrant_cpus']
+#       d.vm.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+#       d.vm.customize ["modifyvm", :id, "--ioapic", "on"]
+#       d.vm.gui=vconfig['oah_vm_gui']
+#     end
+#   end
+
+# end
